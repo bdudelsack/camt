@@ -15,7 +15,7 @@ class EndToEndTest extends AbstractTestCase
     protected function getV1Message()
     {
         $dom = new \DOMDocument('1.0', 'UTF-8');
-        $dom->load(__DIR__.'/Stubs/camt052.v1.xml');
+        $dom->load(__DIR__ . '/Stubs/camt052.v1.xml');
 
         return (new MessageFormat\V01)->getDecoder()->decode($dom);
     }
@@ -23,7 +23,7 @@ class EndToEndTest extends AbstractTestCase
     protected function getV2Message()
     {
         $dom = new \DOMDocument('1.0', 'UTF-8');
-        $dom->load(__DIR__.'/Stubs/camt052.v2.xml');
+        $dom->load(__DIR__ . '/Stubs/camt052.v2.xml');
 
         return (new MessageFormat\V02)->getDecoder()->decode($dom);
     }
@@ -31,7 +31,7 @@ class EndToEndTest extends AbstractTestCase
     protected function getV4Message()
     {
         $dom = new \DOMDocument('1.0', 'UTF-8');
-        $dom->load(__DIR__.'/Stubs/camt052.v4.xml');
+        $dom->load(__DIR__ . '/Stubs/camt052.v4.xml');
 
         return (new MessageFormat\V04)->getDecoder()->decode($dom);
     }
@@ -123,5 +123,46 @@ class EndToEndTest extends AbstractTestCase
         $this->assertInstanceOf(DTO\Pagination::class, $reportV4->getPagination());
         $this->assertEquals('2', $reportV4->getPagination()->getPageNumber());
         $this->assertEquals(true, $reportV4->getPagination()->isLastPage());
+    }
+
+    public function testRelatedParties()
+    {
+        $messages = [
+            $this->getV2Message(),
+        ];
+
+        foreach ($messages as $message) {
+            $reports = $message->getRecords();
+
+            $this->assertCount(1, $reports);
+            foreach ($reports as $report) {
+                $entries = $report->getEntries();
+                $this->assertCount(1, $entries);
+
+                foreach ($entries as $entry) {
+                    $details = $entry->getTransactionDetails();
+                    $this->assertCount(1, $details);
+
+                    foreach ($details as $detail) {
+                        $parties = $detail->getRelatedParties();
+                        $this->assertCount(2, $parties);
+
+                        foreach ($parties as $party) {
+                            if ($party->getRelatedPartyType() instanceof DTO\Creditor) {
+                                $this->assertEquals('Company Name', $party->getRelatedPartyType()->getName());
+                                $this->assertEquals('NL', $party->getRelatedPartyType()->getAddress()->getCountry());
+                                $this->assertEquals([], $party->getRelatedPartyType()->getAddress()->getAddressLines());
+                                $this->assertEquals('NL56AGDH9619008421', (string)$party->getAccount()->getIdentification());
+                            } else if ($party->getRelatedPartyType() instanceof DTO\Debtor) {
+                                $this->assertEquals('NAME NAME', $party->getRelatedPartyType()->getName());
+                                $this->assertEquals('NL', $party->getRelatedPartyType()->getAddress()->getCountry());
+                                $this->assertEquals(['ADDR ADDR 10', '2000 ANTWERPEN'], $party->getRelatedPartyType()->getAddress()->getAddressLines());
+                                $this->assertEquals('NL56AGDH9619008421', (string)$party->getAccount()->getIdentification());
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 }
