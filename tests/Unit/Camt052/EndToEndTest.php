@@ -15,7 +15,7 @@ class EndToEndTest extends AbstractTestCase
     protected function getV1Message()
     {
         $dom = new \DOMDocument('1.0', 'UTF-8');
-        $dom->load(__DIR__ . '/Stubs/camt052.v1.xml');
+        $dom->load(__DIR__.'/Stubs/camt052.v1.xml');
 
         return (new MessageFormat\V01)->getDecoder()->decode($dom);
     }
@@ -23,7 +23,7 @@ class EndToEndTest extends AbstractTestCase
     protected function getV2Message()
     {
         $dom = new \DOMDocument('1.0', 'UTF-8');
-        $dom->load(__DIR__ . '/Stubs/camt052.v2.xml');
+        $dom->load(__DIR__.'/Stubs/camt052.v2.xml');
 
         return (new MessageFormat\V02)->getDecoder()->decode($dom);
     }
@@ -31,7 +31,7 @@ class EndToEndTest extends AbstractTestCase
     protected function getV4Message()
     {
         $dom = new \DOMDocument('1.0', 'UTF-8');
-        $dom->load(__DIR__ . '/Stubs/camt052.v4.xml');
+        $dom->load(__DIR__.'/Stubs/camt052.v4.xml');
 
         return (new MessageFormat\V04)->getDecoder()->decode($dom);
     }
@@ -159,6 +159,36 @@ class EndToEndTest extends AbstractTestCase
                                 $this->assertEquals(['ADDR ADDR 10', '2000 ANTWERPEN'], $party->getRelatedPartyType()->getAddress()->getAddressLines());
                                 $this->assertEquals('NL56AGDH9619008421', (string)$party->getAccount()->getIdentification());
                             }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    public function testRelatedAgents()
+    {
+        $messages = [
+            $this->getV2Message(),
+        ];
+
+        foreach ($messages as $message) {
+            $reports = $message->getRecords();
+
+            $this->assertCount(1, $reports);
+            foreach ($reports as $report) {
+                $entries = $report->getEntries();
+                $this->assertCount(1, $entries);
+
+                /** @var \Genkgo\Camt\DTO\Entry $entry */
+                foreach ($entries as $entry) {
+                    $this->assertCount(1, $entry->getTransactionDetails());
+                    foreach($entry->getTransactionDetails() as $detail) {
+                        $this->assertCount(2, $detail->getRelatedAgents());
+
+                        foreach($detail->getRelatedAgents() as $relatedAgent) {
+                            $this->assertEquals('BANKCHZHXXX', $relatedAgent->getRelatedAgentType()->getBIC());
+                            $this->assertEquals('Some bank', $relatedAgent->getRelatedAgentType()->getName());
                         }
                     }
                 }

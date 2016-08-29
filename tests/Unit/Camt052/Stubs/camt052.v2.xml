@@ -117,6 +117,20 @@
                                 <Ccy>EUR</Ccy>
                             </CdtrAcct>
                         </RltdPties>
+                        <RltdAgts>
+                            <DbtrAgt>
+                                <FinInstnId>
+                                    <BIC>BANKCHZHXXX</BIC>
+                                    <Nm>Some bank</Nm>
+                                </FinInstnId>
+                            </DbtrAgt>
+                            <CdtrAgt>
+                                <FinInstnId>
+                                    <BIC>BANKCHZHXXX</BIC>
+                                    <Nm>Some bank</Nm>
+                                </FinInstnId>
+                            </CdtrAgt>
+                        </RltdAgts>
                     </TxDtls>
                 </NtryDtls>
                 <AddtlNtryInf>Credit</AddtlNtryInf>
