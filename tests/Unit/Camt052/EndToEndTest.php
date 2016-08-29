@@ -28,6 +28,14 @@ class EndToEndTest extends AbstractTestCase
         return (new MessageFormat\V02)->getDecoder()->decode($dom);
     }
 
+    protected function getV2OtherAccountMessage()
+    {
+        $dom = new \DOMDocument('1.0', 'UTF-8');
+        $dom->load(__DIR__.'/Stubs/camt052.v2.other-account.xml');
+
+        return (new MessageFormat\V02)->getDecoder()->decode($dom);
+    }
+
     protected function getV4Message()
     {
         $dom = new \DOMDocument('1.0', 'UTF-8');
@@ -123,5 +131,33 @@ class EndToEndTest extends AbstractTestCase
         $this->assertInstanceOf(DTO\Pagination::class, $reportV4->getPagination());
         $this->assertEquals('2', $reportV4->getPagination()->getPageNumber());
         $this->assertEquals(true, $reportV4->getPagination()->isLastPage());
+    }
+
+    public function testOtherAccount()
+    {
+        $messages = [
+            $this->getV2OtherAccountMessage()
+        ];
+
+        foreach ($messages as $message) {
+            $reports = $message->getRecords();
+
+            $this->assertCount(1, $reports);
+            foreach ($reports as $report) {
+                $entries = $report->getEntries();
+                $this->assertCount(1, $entries);
+
+                /** @var DTO\Entry $entry */
+                foreach ($entries as $entry) {
+                    $parties = $entry->getTransactionDetail()->getRelatedParties();
+
+                    $this->assertCount(2, $parties);
+
+                    foreach($parties as $party) {
+                        $this->assertInstanceOf(DTO\OtherAccount::class,$party->getAccount());
+                    }
+                }
+            }
+        }
     }
 }
